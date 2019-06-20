@@ -9,6 +9,11 @@ typedef struct inter_core {
     mapper_t    mapper;
 } inter_core_t;
 
+enum FLAGS {
+    NEG = 0b10000000
+    ZER = 0b01000000
+};
+
 uint8_t get_byte(inter_core_t *core, uint64_t addr);
 uint16_t get_short(inter_core_t *core, uint64_t addr);
 uint32_t get_int(inter_core_t *core, uint64_t addr);
@@ -77,10 +82,42 @@ void run_opcode(inter_core_t *core) {
             break;
         case 0x0A: // CMP
         case 0x0B: // JMP
+            core->PC = get_pc_long(core);
+            break;
         case 0x0C: // JEQ
+            if (core->FLAG & ZER)
+                core->PC = get_pc_long(core);
+            else
+                get_pc_long(core);
+            break;
         case 0x0D: // JGT
-        case 0x0E: // PUS
-        case 0x0F: // POP
+            if ((core->FLAG & NEG) == 0x0)
+                core->PC = get_pc_long(core);
+            else 
+                get_pc_long(core);
+            break;
+        case 0x0E: // PHA
+            push_stack_long(core, core->A);
+            break;
+        case 0x0F: // PHB
+            push_stack_long(core, core->B);
+            break;
+        case 0x10: // PLA
+            core->A = pop_stack_long(core);
+            break;
+        case 0x11: // PLB
+            core->B = pop_stack_long(core);
+            break;
+        case 0x12: // SPC
+            uint64_t temp = core->A;
+            core->A = core->PC;
+            core->PC = temp;
+            break;
+        case 0x13: // SSP
+            uint64_t temp = core->B;
+            core->B = core->PC;
+            core->PC = temp;
+            break;
         case 0xF0: // PRT
             char *addr = (char *) get_pc_long(core);
             printf("%s", addr);
