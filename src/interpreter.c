@@ -77,7 +77,8 @@ int main(int argc, char *argv[])
     uint64_t size = ftell(infile);
     rewind(infile);
 
-    for (uint64_t addr = 0x00; addr < size; addr++) {
+    for (uint64_t addr = 0x00; addr < size; addr++)
+    {
         memory[addr] = fgetc(infile);
     }
 
@@ -89,7 +90,9 @@ int main(int argc, char *argv[])
     core->FLAG = 0x00;
     core->mapper = mapper;
 
-    while (run_opcode(core)) {}
+    while (run_opcode(core))
+    {
+    }
 
     int code = core->A;
 
