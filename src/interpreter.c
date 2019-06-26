@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #include "mapper.h"
 
@@ -18,6 +20,8 @@ enum FLAGS
     NEG = 0b10000000,
     ZER = 0b01000000
 };
+
+bool run_opcode(inter_core_t *core);
 
 uint8_t get_byte(inter_core_t *core, uint64_t addr);
 uint16_t get_short(inter_core_t *core, uint64_t addr);
@@ -44,28 +48,92 @@ void push_stack_short(inter_core_t *core, uint16_t data);
 void push_stack_int(inter_core_t *core, uint32_t data);
 void push_stack_long(inter_core_t *core, uint64_t data);
 
-void run_opcode(inter_core_t *core)
+uint8_t *memory;
+
+uint8_t read_memory(uint64_t addr);
+void write_memory(uint64_t addr, uint8_t value);
+
+int main(int argc, char *argv[])
+{
+    // Usage: ./bint filename
+    if (argc < 2)
+    {
+        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    mapper_t *mapper = new_mapper();
+    mapping_t *mapping = malloc(sizeof(mapping_t));
+    mapping->start = 0x00;
+    mapping->len = 0x100;
+    mapping->read_func = read_memory;
+    mapping->write_func = write_memory;
+    int mapping_handle = add_mapping(mapper, mapping);
+
+    memory = calloc(0x100, sizeof(uint8_t));
+    FILE *infile = fopen(argv[1], "rb");
+
+    fseek(infile, 0L, SEEK_END);
+    uint64_t size = ftell(infile);
+    rewind(infile);
+
+    for (uint64_t addr = 0x00; addr < size; addr++) {
+        memory[addr] = fgetc(infile);
+    }
+
+    inter_core_t *core = malloc(sizeof(inter_core_t));
+    core->A = 0x00;
+    core->B = 0x00;
+    core->PC = 0x00;
+    core->SP = 0x00;
+    core->FLAG = 0x00;
+    core->mapper = mapper;
+
+    while (run_opcode(core)) {}
+
+    int code = core->A;
+
+    free(core);
+    fclose(infile);
+    free(memory);
+    del_mapping(mapper, mapping_handle);
+    del_mapper(mapper);
+    return code;
+}
+
+uint8_t read_memory(uint64_t addr)
+{
+    return memory[addr];
+}
+
+void write_memory(uint64_t addr, uint8_t value)
+{
+    memory[addr] = value;
+}
+
+bool run_opcode(inter_core_t *core)
 {
     uint8_t opcode = get_pc_byte(core);
+    uint64_t addr;
 
     switch (opcode)
     {
     case 0x00: // NOP
         break;
     case 0x01: // LDA
-        uint64_t addr = get_pc_long(core);
+        addr = get_pc_long(core);
         core->A = get_long(core, addr);
         break;
     case 0x02: // LDB
-        uint64_t addr = get_pc_long(core);
+        addr = get_pc_long(core);
         core->B = get_long(core, addr);
         break;
     case 0x03: // STA
-        uint64_t addr = get_pc_long(core);
+        addr = get_pc_long(core);
         put_long(core, addr, core->A);
         break;
     case 0x04: // STB
-        uint64_t addr = get_pc_long(core);
+        addr = get_pc_long(core);
         put_long(core, addr, core->B);
         break;
     case 0x05: // ADD
@@ -75,7 +143,7 @@ void run_opcode(inter_core_t *core)
         core->A -= core->B;
         break;
     case 0x07: // CAL
-        uint64_t addr = get_pc_long(core);
+        addr = get_pc_long(core);
         push_stack_long(core, core->PC);
         core->PC = addr;
         break;
@@ -83,11 +151,11 @@ void run_opcode(inter_core_t *core)
         core->PC = pop_stack_long(core);
         break;
     case 0x09: // SWP
-        uint64_t tmp = core->A;
+        addr = core->A;
         core->A = core->B;
-        core->B = core->A;
+        core->B = addr;
         break;
-    case 0x0A: // CMP
+    case 0x0A: // CMP TODO: Complete Opcode
     case 0x0B: // JMP
         core->PC = get_pc_long(core);
         break;
@@ -116,23 +184,23 @@ void run_opcode(inter_core_t *core)
         core->B = pop_stack_long(core);
         break;
     case 0x12: // SPC
-        uint64_t temp = core->A;
+        addr = core->A;
         core->A = core->PC;
-        core->PC = temp;
+        core->PC = addr;
         break;
     case 0x13: // SSP
-        uint64_t temp = core->B;
+        addr = core->B;
         core->B = core->PC;
-        core->PC = temp;
+        core->PC = addr;
         break;
     case 0xF0: // PRT
-        char *addr = (char *)get_pc_long(core);
-        printf("%s", addr);
+        printf("%s", (char *)get_pc_long(core));
         break;
     case 0xFF: // HLT
-        exit(core->A);
+        return false;
         break;
     }
+    return true;
 }
 
 uint8_t get_byte(inter_core_t *core, uint64_t addr)
@@ -142,17 +210,17 @@ uint8_t get_byte(inter_core_t *core, uint64_t addr)
 
 uint16_t get_short(inter_core_t *core, uint64_t addr)
 {
-    return get_byte(core, addr) + get_byte(core, addr + 1) << 8;
+    return get_byte(core, addr) + (((uint16_t)get_byte(core, addr + 1)) << 8);
 }
 
 uint32_t get_int(inter_core_t *core, uint64_t addr)
 {
-    return get_short(core, addr) + get_short(core, addr + 2) << 16;
+    return get_short(core, addr) + (((uint32_t)get_short(core, addr + 2)) << 16);
 }
 
 uint64_t get_long(inter_core_t *core, uint64_t addr)
 {
-    return get_int(core, addr) + get_int(core, addr + 4) << 32;
+    return get_int(core, addr) + (((uint64_t)get_int(core, addr + 4)) << 32);
 }
 
 void put_byte(inter_core_t *core, uint64_t addr, uint8_t data)
