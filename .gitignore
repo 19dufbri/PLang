@@ -1,3 +1,5 @@
 .vscode
 *.bak
 bint
+*.o
+bin
