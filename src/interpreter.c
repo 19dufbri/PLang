@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
     fclose(infile);
     free(memory);
     del_mapping(mapper, mapping_handle);
+    free(mapping);
     del_mapper(mapper);
     return code;
 }
