@@ -205,7 +205,7 @@ bool run_opcode(inter_core_t *core)
         core->PC = addr;
         break;
     case 0xF0: // PRT
-        printf("%s", (char *)(get_pc_long(core) + (uint64_t) memory));
+        putchar(core->A);
         break;
     case 0xFF: // HLT
         return false;

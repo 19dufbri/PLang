@@ -34,21 +34,5 @@ Bytecode:
 0x11                       PLB    -    Pull B register
 0x12                       SPC    -    Swap A with PC
 0x13                       SSP    -    Swap A with SP
-0xF0 0xXXXXXXXXXXXXXXXX    PRT    -    Print string at pointer
+0xF0                       PRT    -    Print character in A
 0xFF                       HLT    -    Halt
-
-function main() void {
-    int i;
-    i = 5;
-    int m = min(i, 6);
-    return m;
-}
-
-
-function min(int a, int b) int {
-    if (a > b) {
-        return a;
-    } else {
-        return b;
-    }
-}
