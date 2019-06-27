@@ -2,7 +2,7 @@ IDIR   = ./include
 ODIR   = ./bin
 SDIR   = ./src
 OUT    = bint
-CFLAGS = -std=c11 -I$(IDIR) -Wall
+CFLAGS = -std=c11 -I$(IDIR) -Wall -ggdb
 CC     = gcc
 HEAD   = $(wildcard $(IDIR)/*.h)
 OBJ    = $(ODIR)/interpreter.o $(ODIR)/linked_list.o $(ODIR)/mapper.o 
