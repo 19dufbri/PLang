@@ -159,7 +159,14 @@ bool run_opcode(inter_core_t *core)
         core->A = core->B;
         core->B = addr;
         break;
-    case 0x0A: // CMP TODO: Complete Opcode
+    case 0x0A: // CMP
+        if (core->A == core->B) {
+            core->FLAG |= ZER;
+        }
+        if (core->A <= core->B) {
+            core->FLAG |= NEG; 
+        }
+        break;
     case 0x0B: // JMP
         core->PC = get_pc_long(core);
         break;

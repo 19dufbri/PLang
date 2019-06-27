@@ -1,6 +1,3 @@
-Bootstrapping:
-Interpreter
-Interpreted Compiler - Compile Compiler
 Types:
 Long - 64 bits
 Pointer/Array - Index into memory
@@ -8,37 +5,37 @@ Functions
 
 Virtual Machine:
 Registers:
-A                        -     Accumulator
-B                        -    Second operand
-PC                        -    Program Counter
-SP                        -    Stack Pointer
-FLAG        NZ------            -    Flag register
+A                       -    Accumulator
+B                       -    Second operand
+PC                      -    Program Counter
+SP                      -    Stack Pointer
+FLAG        NZ------    -    Flag register
 Negative
 Zero
+
 Bytecode:
-0x00                    NOP    -    Do Nothing
-0x01 0xXXXXXXXXXXXXXXXX    LDA    -     Load A from address
+0x00                       NOP    -    Do Nothing
+0x01 0xXXXXXXXXXXXXXXXX    LDA    -    Load A from address
 0x02 0xXXXXXXXXXXXXXXXX    LDB    -    Load B from address
 0x03 0xXXXXXXXXXXXXXXXX    STA    -    Store A at address
 0x04 0xXXXXXXXXXXXXXXXX    STB    -    Store B at address
-0x05                     ADD    -     Add B to A
-0x06                    SUB    -    Subtract B from A
+0x05                       ADD    -    Add B to A
+0x06                       SUB    -    Subtract B from A
 0x07 0xXXXXXXXXXXXXXXXX    CAL    -    Call function at address
-0x08                    RET    -     Return from function
-0x09                    SBR    -    Swap A and B registers
-0x0A                    CMP    -    Compare A to B
+0x08                       RET    -    Return from function
+0x09                       SBR    -    Swap A and B registers
+0x0A                       CMP    -    Compare A to B
 0x0B 0xXXXXXXXXXXXXXXXX    JMP    -    Jump to address
 0x0C 0xXXXXXXXXXXXXXXXX    JEQ    -    Jump if zero set
 0x0D 0xXXXXXXXXXXXXXXXX    JGT    -    Jump if negative unset
-0x0E                    PHA    -    Push A register
-0x0F                    PHB    -    Push B register
-0x10                    PLA    -    Pull A register
-0x11                    PLB    -    Pull B register
-0x12                    SPC    -    Swap A with PC
-0x13                    SSP    -    Swap A with SP
+0x0E                       PHA    -    Push A register
+0x0F                       PHB    -    Push B register
+0x10                       PLA    -    Pull A register
+0x11                       PLB    -    Pull B register
+0x12                       SPC    -    Swap A with PC
+0x13                       SSP    -    Swap A with SP
 0xF0 0xXXXXXXXXXXXXXXXX    PRT    -    Print string at pointer
-0xFF                    HLT    -     Halt
-
+0xFF                       HLT    -    Halt
 
 function main() void {
     int i;
@@ -51,7 +48,7 @@ function main() void {
 function min(int a, int b) int {
     if (a > b) {
         return a;
-} else {
-        return b
-}
+    } else {
+        return b;
+    }
 }
