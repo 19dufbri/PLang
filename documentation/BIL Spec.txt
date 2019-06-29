@@ -34,5 +34,6 @@ Bytecode:
 0x11                       PLB    -    Pull B register
 0x12                       SPC    -    Swap A with PC
 0x13                       SSP    -    Swap A with SP
+0x20                       LAB    -    Load one byte into A
 0xF0                       PRT    -    Print character in A
 0xFF                       HLT    -    Halt

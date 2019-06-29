@@ -200,9 +200,13 @@ bool run_opcode(inter_core_t *core)
         core->PC = addr;
         break;
     case 0x13: // SSP
-        addr = core->B;
-        core->B = core->PC;
-        core->PC = addr;
+        addr = core->A;
+        core->A = core->SP;
+        core->SP = addr;
+        break;
+    case 0x20: // LAB
+        addr = get_pc_long(core);
+        core->A = get_byte(core, addr);
         break;
     case 0xF0: // PRT
         putchar(core->A);
