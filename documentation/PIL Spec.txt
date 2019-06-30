@@ -1,19 +1,13 @@
-Types:
-Long - 64 bits
-Pointer/Array - Index into memory
-Functions
-
-Virtual Machine:
-Registers:
+Machine Registers:
 A                       -    Accumulator
 B                       -    Second operand
 PC                      -    Program Counter
 SP                      -    Stack Pointer
 FLAG        NZ------    -    Flag register
-Negative
-Zero
+    NEG     -   Negative
+    ZER     -   Zero
 
-Bytecode:
+Lowops and Memory Stores:
 0x00                        NOP     -   Do Nothing
 0x01                        RES     -   Reserved
 0x02                        RES     -   Reserved
