@@ -103,9 +103,10 @@ ALU Instructions:
 0x4E                        BPC     -   Swap B and PC
 0x4F                        BSP     -   Swap B and SP
 
-0x50                        RES     -   Reserved
-0x51                        RES     -   Reserved
-0x52                        RES     -   Reserved
+Native Functions:
+0x50                        MTP     -   Convert A to P Address
+0x51                        PTM     -   Convert A to M Address
+0x52                        MCA     -   Machine Call (P Addr) (A and B passed in)
 0x53                        RES     -   Reserved
 0x54                        RES     -   Reserved
 0x55                        RES     -   Reserved
@@ -120,5 +121,4 @@ ALU Instructions:
 0x5E                        RES     -   Reserved
 0x5F                        RES     -   Reserved
 
-0xF0                       PRT    -    Print character in A
-0xFF                       HLT    -    Halt
+0xFF                        HLT     -   Halt
