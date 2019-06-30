@@ -30,14 +30,14 @@ Load Registers:
 0x11 0xXXXXXXXX             LAI32   -   Load 32 bit immediate to A
 0x12 0xXXXX                 LAI16   -   Load 16 bit immediate to A
 0x13 0xXX                   LAI8    -   Load 8 bit immediate to A
-0x14 0xXXXXXXXXXXXXXXXX     LAD64   -   Load 64 bit direct to A
-0x15 0xXXXXXXXXXXXXXXXX     LAD32   -   Load 32 bit direct to A
-0x16 0xXXXXXXXXXXXXXXXX     LAD16   -   Load 16 bit direct to A
-0x17 0xXXXXXXXXXXXXXXXX     LAD8    -   Load 8 bit direct to A
-0x18 0xXXXXXXXXXXXXXXXX     LBI64   -   Load 64 bit immediate to B
-0x19 0xXXXXXXXX             LBI32   -   Load 32 bit immediate to B
-0x1A 0xXXXX                 LBI16   -   Load 16 bit immediate to B
-0x1B 0xXX                   LBI8    -   Load 8 bit immediate to B
+0x14 0xXXXXXXXXXXXXXXXX     LBI64   -   Load 64 bit immediate to B
+0x15 0xXXXXXXXX             LBI32   -   Load 32 bit immediate to B
+0x16 0xXXXX                 LBI16   -   Load 16 bit immediate to B
+0x17 0xXX                   LBI8    -   Load 8 bit immediate to B
+0x18 0xXXXXXXXXXXXXXXXX     LAD64   -   Load 64 bit direct to A
+0x19 0xXXXXXXXXXXXXXXXX     LAD32   -   Load 32 bit direct to A
+0x1A 0xXXXXXXXXXXXXXXXX     LAD16   -   Load 16 bit direct to A
+0x1B 0xXXXXXXXXXXXXXXXX     LAD8    -   Load 8 bit direct to A
 0x1C 0xXXXXXXXXXXXXXXXX     LBD64   -   Load 64 bit direct to B
 0x1D 0xXXXXXXXXXXXXXXXX     LBD32   -   Load 32 bit direct to B
 0x1E 0xXXXXXXXXXXXXXXXX     LBD16   -   Load 16 bit direct to B
@@ -87,7 +87,7 @@ ALU Instructions:
 0x44                        AND     -   Store A and B in A
 0x45                        OR      -   Store A or B in A
 0x46                        XOR     -   Store A xor B in A
-0x47                        RES     -   Reserved
+0x47                        CMP     -   Compare A to B
 0x48                        RES     -   Reserved
 0x49                        RES     -   Reserved
 0x4A                        SWP     -   Swap A and B

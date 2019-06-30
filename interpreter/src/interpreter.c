@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/mman.h>
 
 #include "mapper.h"
+#include "memory.h"
 
+// Redundant, removes stupid linter error
 typedef struct inter_core
 {
     uint64_t A;
@@ -15,6 +19,7 @@ typedef struct inter_core
     mapper_t *mapper;
 } inter_core_t;
 
+// Redundant, removes stupid linter error
 enum FLAGS
 {
     NEG = 0b10000000,
@@ -22,31 +27,7 @@ enum FLAGS
 };
 
 bool run_opcode(inter_core_t *core);
-
-uint8_t get_byte(inter_core_t *core, uint64_t addr);
-uint16_t get_short(inter_core_t *core, uint64_t addr);
-uint32_t get_int(inter_core_t *core, uint64_t addr);
-uint64_t get_long(inter_core_t *core, uint64_t addr);
-
-void put_byte(inter_core_t *core, uint64_t addr, uint8_t data);
-void put_short(inter_core_t *core, uint64_t addr, uint16_t data);
-void put_int(inter_core_t *core, uint64_t addr, uint32_t data);
-void put_long(inter_core_t *core, uint64_t addr, uint64_t data);
-
-uint8_t get_pc_byte(inter_core_t *core);
-uint16_t get_pc_short(inter_core_t *core);
-uint32_t get_pc_int(inter_core_t *core);
-uint64_t get_pc_long(inter_core_t *core);
-
-uint8_t pop_stack_byte(inter_core_t *core);
-uint16_t pop_stack_short(inter_core_t *core);
-uint32_t pop_stack_int(inter_core_t *core);
-uint64_t pop_stack_long(inter_core_t *core);
-
-void push_stack_byte(inter_core_t *core, uint8_t data);
-void push_stack_short(inter_core_t *core, uint16_t data);
-void push_stack_int(inter_core_t *core, uint32_t data);
-void push_stack_long(inter_core_t *core, uint64_t data);
+bool machine_call(inter_core_t *core);
 
 uint8_t *memory;
 
@@ -105,16 +86,6 @@ int main(int argc, char *argv[])
     return code;
 }
 
-uint8_t read_memory(uint64_t addr)
-{
-    return memory[addr];
-}
-
-void write_memory(uint64_t addr, uint8_t value)
-{
-    memory[addr] = value;
-}
-
 bool run_opcode(inter_core_t *core)
 {
     uint8_t opcode = get_pc_byte(core);
@@ -124,93 +95,242 @@ bool run_opcode(inter_core_t *core)
     {
     case 0x00: // NOP
         break;
-    case 0x01: // LDA
-        addr = get_pc_long(core);
-        core->A = get_long(core, addr);
-        break;
-    case 0x02: // LDB
-        addr = get_pc_long(core);
-        core->B = get_long(core, addr);
-        break;
-    case 0x03: // STA
+    case 0x08: // STA64
         addr = get_pc_long(core);
         put_long(core, addr, core->A);
         break;
-    case 0x04: // STB
+    case 0x09: // STA32
+        addr = get_pc_long(core);
+        put_int(core, addr, core->A & 0xFFFFFFFF);
+        break;
+    case 0x0A: // STA16
+        addr = get_pc_long(core);
+        put_short(core, addr, core->A & 0xFFFF);
+        break;
+    case 0x0B: // STA8
+        addr = get_pc_long(core);
+        put_byte(core, addr, core->A & 0xFF);
+        break;
+    case 0x0C: // STB64
         addr = get_pc_long(core);
         put_long(core, addr, core->B);
         break;
-    case 0x05: // ADD
-        core->A += core->B;
+    case 0x0D: // STB32
+        addr = get_pc_long(core);
+        put_int(core, addr, core->B & 0xFFFFFFFF);
         break;
-    case 0x06: // SUB
-        core->A -= core->B;
+    case 0x0E: // STB16
+        addr = get_pc_long(core);
+        put_short(core, addr, core->B & 0xFFFF);
         break;
-    case 0x07: // CAL
+    case 0x0F: // STB8
+        addr = get_pc_long(core);
+        put_byte(core, addr, core->B & 0xFF);
+        break;
+
+    case 0x10: // LAI64
+        core->A = get_pc_long(core);
+        break;
+    case 0x11: // LAI32
+        core->A = get_pc_int(core);
+        break;
+    case 0x12: // LAI16
+        core->A = get_pc_short(core);
+        break;
+    case 0x13: // LAI8
+        core->A = get_pc_byte(core);
+        break;
+    case 0x14: // LBI64
+        core->B = get_pc_long(core);
+        break;
+    case 0x15: // LBI32
+        core->B = get_pc_int(core);
+        break;
+    case 0x16: // LBI16
+        core->B = get_pc_short(core);
+        break;
+    case 0x17: // LBI8
+        core->B = get_pc_byte(core);
+        break;
+    case 0x18: // LAD64
+        addr = get_pc_long(core);
+        core->A = get_long(core, addr);
+        break;
+    case 0x19: // LAD32
+        addr = get_pc_long(core);
+        core->A = get_int(core, addr);
+        break;
+    case 0x1A: // LAD16
+        addr = get_pc_long(core);
+        core->A = get_short(core, addr);
+        break;
+    case 0x1B: // LAD8
+        addr = get_pc_long(core);
+        core->A = get_byte(core, addr);
+        break;
+    case 0x1C: // LBD64
+        addr = get_pc_long(core);
+        core->B = get_long(core, addr);
+        break;
+    case 0x1D: // LBD32
+        addr = get_pc_long(core);
+        core->B = get_int(core, addr);
+        break;
+    case 0x1E: // LBD16
+        addr = get_pc_long(core);
+        core->B = get_short(core, addr);
+        break;
+    case 0x1F: // LBD8
+        addr = get_pc_long(core);
+        core->B = get_byte(core, addr);
+        break;
+
+    case 0x20: // PHA64
+        push_stack_long(core, core->A);
+        break;
+    case 0x21: // PHA32
+        push_stack_int(core, core->A & 0xFFFFFFFF);
+        break;
+    case 0x22: // PHA16
+        push_stack_short(core, core->A & 0xFFFF);
+        break;
+    case 0x23: // PHA8
+        push_stack_byte(core, core->A & 0xFF);
+        break;
+    case 0x24: // PHB64
+        push_stack_long(core, core->B);
+        break;
+    case 0x25: // PHB32
+        push_stack_int(core, core->B & 0xFFFFFFFF);
+        break;
+    case 0x26: // PHB16
+        push_stack_short(core, core->B & 0xFFFF);
+        break;
+    case 0x27: // PHB8
+        push_stack_byte(core, core->B & 0xFF);
+        break;
+    case 0x28: // PLA64
+        core->A = pop_stack_long(core);
+        break;
+    case 0x29: // PLA32
+        core->A = pop_stack_int(core);
+        break;
+    case 0x2A: // PLA16
+        core->A = pop_stack_short(core);
+        break;
+    case 0x2B: // PLA8
+        core->A = pop_stack_byte(core);
+        break;
+    case 0x2C: // PLB64
+        core->B = pop_stack_long(core);
+        break;
+    case 0x2D: // PLB32
+        core->B = pop_stack_int(core);
+        break;
+    case 0x2E: // PLB16
+        core->B = pop_stack_short(core);
+        break;
+    case 0x2F: // PLB8
+        core->B = pop_stack_byte(core);
+        break;
+
+    case 0x30: // CAL
         addr = get_pc_long(core);
         push_stack_long(core, core->PC);
         core->PC = addr;
         break;
-    case 0x08: // RET
+    case 0x31: // RET
         core->PC = pop_stack_long(core);
         break;
-    case 0x09: // SWP
-        addr = core->A;
-        core->A = core->B;
-        core->B = addr;
-        break;
-    case 0x0A: // CMP
-        if (core->A == core->B) {
-            core->FLAG |= ZER;
-        }
-        if (core->A <= core->B) {
-            core->FLAG |= NEG; 
-        }
-        break;
-    case 0x0B: // JMP
+    case 0x32: // JMP
         core->PC = get_pc_long(core);
         break;
-    case 0x0C: // JEQ
+    case 0x33: // JEQ
         if (core->FLAG & ZER)
             core->PC = get_pc_long(core);
         else
             get_pc_long(core);
         break;
-    case 0x0D: // JGT
-        if ((core->FLAG & NEG) == 0x0)
-            core->PC = get_pc_long(core);
-        else
+    case 0x34: // JGT
+        if (core->FLAG & NEG)
             get_pc_long(core);
+        else
+            core->PC = get_pc_long(core);
         break;
-    case 0x0E: // PHA
-        push_stack_long(core, core->A);
+
+    case 0x40: // ADD
+        core->A += core->B;
         break;
-    case 0x0F: // PHB
-        push_stack_long(core, core->B);
+    case 0x41: // SUB
+        core->A -= core->B;
         break;
-    case 0x10: // PLA
-        core->A = pop_stack_long(core);
+    case 0x42: // NEA
+        core->A = ~core->A;
         break;
-    case 0x11: // PLB
-        core->B = pop_stack_long(core);
+    case 0x43: // NEB
+        core->B = ~core->B;
         break;
-    case 0x12: // SPC
-        addr = core->A;
-        core->A = core->PC;
+    case 0x44: // AND
+        core->A &= core->B;
+        break;
+    case 0x45: // OR
+        core->A |= core->B;
+        break;
+    case 0x46: // XOR
+        core->A ^= core->B;
+        break;
+    case 0x47: // CMP
+        if (core->A == core->B)
+            core->FLAG |= ZER;
+        else
+            core->FLAG &= ~ZER;
+        if (core->A < core->B)
+            core->FLAG |= NEG;
+        else
+            core->FLAG &= ~NEG;
+        break;
+    case 0x4A: // SWP
+        addr = core->B;
+        core->B = core->A;
+        core->A = addr;
+        break;
+    case 0x4B: // SPC
+        addr = core->SP;
+        core->SP = core->PC;
         core->PC = addr;
         break;
-    case 0x13: // SSP
-        addr = core->A;
-        core->A = core->SP;
+    case 0x4C: // APC
+        addr = core->PC;
+        core->PC = core->A;
+        core->A = addr;
+        break;
+    case 0x4D: // ASP
+        addr = core->SP;
+        core->SP = core->A;
+        core->A = addr;
+        break;
+    case 0x4E: // BPC
+        addr = core->B;
+        core->B = core->PC;
+        core->PC = addr;
+        break;
+    case 0x4F: // BSP
+        addr = core->B;
+        core->B = core->SP;
         core->SP = addr;
         break;
-    case 0x20: // LAB
-        addr = get_pc_long(core);
-        core->A = get_byte(core, addr);
+    
+    case 0x50: // MTP
+        core->A -= (int) memory;
         break;
-    case 0xF0: // PRT
-        putchar(core->A);
+    case 0x51: // PTM
+        core->A += (int) memory;
         break;
+    case 0x52: // MCA
+        if (!machine_call(core)) 
+            return false;
+        break;
+
     case 0xFF: // HLT
         return false;
         break;
@@ -218,120 +338,22 @@ bool run_opcode(inter_core_t *core)
     return true;
 }
 
-uint8_t get_byte(inter_core_t *core, uint64_t addr)
-{
-    return mapped_read(core->mapper, addr);
+bool machine_call(inter_core_t *core) {
+    void *map = mmap(NULL, core->B, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+    if (map == -1)
+        return false;
+    memcpy(map, memory + core->A, core->B);
+    core->A = ((uint64_t (*)(uint64_t))map)(pop_stack_long(core));
+    munmap(map, core->B);
+    return true;
 }
 
-uint16_t get_short(inter_core_t *core, uint64_t addr)
+uint8_t read_memory(uint64_t addr)
 {
-    return get_byte(core, addr) + (((uint16_t)get_byte(core, addr + 1)) << 8);
+    return memory[addr];
 }
 
-uint32_t get_int(inter_core_t *core, uint64_t addr)
+void write_memory(uint64_t addr, uint8_t value)
 {
-    return get_short(core, addr) + (((uint32_t)get_short(core, addr + 2)) << 16);
-}
-
-uint64_t get_long(inter_core_t *core, uint64_t addr)
-{
-    return get_int(core, addr) + (((uint64_t)get_int(core, addr + 4)) << 32);
-}
-
-void put_byte(inter_core_t *core, uint64_t addr, uint8_t data)
-{
-    mapped_write(core->mapper, addr, data);
-}
-
-void put_short(inter_core_t *core, uint64_t addr, uint16_t data)
-{
-    put_byte(core, addr, data & 0xFF);
-    put_byte(core, addr + 1, data >> 8);
-}
-
-void put_int(inter_core_t *core, uint64_t addr, uint32_t data)
-{
-    put_short(core, addr, data & 0xFFFF);
-    put_short(core, addr + 2, data >> 16);
-}
-
-void put_long(inter_core_t *core, uint64_t addr, uint64_t data)
-{
-    put_int(core, addr, data & 0xFFFFFFFF);
-    put_int(core, addr + 4, data >> 32);
-}
-
-uint8_t get_pc_byte(inter_core_t *core)
-{
-    return get_byte(core, core->PC++);
-}
-
-uint16_t get_pc_short(inter_core_t *core)
-{
-    uint16_t result = get_short(core, core->PC);
-    core->PC += 2;
-    return result;
-}
-
-uint32_t get_pc_int(inter_core_t *core)
-{
-    uint32_t result = get_int(core, core->PC);
-    core->PC += 4;
-    return result;
-}
-
-uint64_t get_pc_long(inter_core_t *core)
-{
-    uint64_t result = get_int(core, core->PC);
-    core->PC += 8;
-    return result;
-}
-
-uint8_t pop_stack_byte(inter_core_t *core)
-{
-    return get_byte(core, core->SP++);
-}
-
-uint16_t pop_stack_short(inter_core_t *core)
-{
-    uint16_t result = get_short(core, core->SP);
-    core->SP += 2;
-    return result;
-}
-
-uint32_t pop_stack_int(inter_core_t *core)
-{
-    uint32_t result = get_short(core, core->SP);
-    core->SP += 4;
-    return result;
-}
-
-uint64_t pop_stack_long(inter_core_t *core)
-{
-    uint64_t result = get_short(core, core->SP);
-    core->SP += 8;
-    return result;
-}
-
-void push_stack_byte(inter_core_t *core, uint8_t data)
-{
-    put_byte(core, --core->SP, data);
-}
-
-void push_stack_short(inter_core_t *core, uint16_t data)
-{
-    core->SP -= 2;
-    put_short(core, core->SP, data);
-}
-
-void push_stack_int(inter_core_t *core, uint32_t data)
-{
-    core->SP -= 4;
-    put_int(core, core->SP, data);
-}
-
-void push_stack_long(inter_core_t *core, uint64_t data)
-{
-    core->SP -= 8;
-    put_long(core, core->SP, data);
+    memory[addr] = value;
 }
