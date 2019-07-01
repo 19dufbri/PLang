@@ -373,8 +373,8 @@ bool machine_call(inter_core_t *core) {
     void *map = mmap(NULL, core->B, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
     if (map == (void *) -1)
         return false;
-    memcpy(map, memory + core->A, core->B);
-    core->A = ((uint64_t (*)(uint64_t))map)(pop_stack_long(core));
+    memcpy(map, get_pc_long(core), core->B);
+    core->A = ((uint64_t (*)(uint64_t))map)(core->A);
     munmap(map, core->B);
     return true;
 }
