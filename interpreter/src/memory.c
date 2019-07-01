@@ -2,17 +2,6 @@
 #include "memory.h"
 #include "mapper.h"
 
-// Redundant, removes stupid linter error
-typedef struct inter_core
-{
-    uint64_t A;
-    uint64_t B;
-    uint64_t PC;
-    uint64_t SP;
-    uint8_t FLAG;
-    mapper_t *mapper;
-} inter_core_t;
-
 uint8_t get_byte(inter_core_t *core, uint64_t addr)
 {
     return mapped_read(core->mapper, addr);
