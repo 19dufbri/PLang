@@ -118,7 +118,7 @@ ALU Instructions:
 Native Functions:
 0x60                        MTP     -   Convert A to P Address
 0x61                        PTM     -   Convert A to M Address
-0x62 0xXXXXXXXXXXXXXXXX     MCA     -   Machine Call (M Addr) (A and B passed in, A return)
+0x62 0xXXXXXXXXXXXXXXXX     MCA     -   Machine Call (Operand M pointer, B func length, A input, A return)
 0x63                        RES     -   Reserved
 0x64                        RES     -   Reserved
 0x65                        RES     -   Reserved
