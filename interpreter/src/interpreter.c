@@ -73,121 +73,225 @@ bool run_opcode(inter_core_t *core)
 	uint8_t opcode = get_pc_byte(core);
 	uint64_t addr;
 
-	switch (opcode)
-	{
+	// Instruction Type
+	if (opcode & 0x80 == 0x00)
+	{ // Load/Store
+		uint64_t val;
+		// Addressing Modes
+		if (opcode & 0x70 == 0x00)
+		{ // Immediate
+			addr = core->PC;
+			core->PC += 8;
+		}
+		else if (opcode & 0x70 == 0x10)
+		{ // Direct
+			addr = get_pc_long(core);
+		}
+		else if (opcode & 0x70 == 0x20)
+		{ // SP Offset
+			addr = core->SP +  ((int64_t) get_pc_long(core));
+		}
+		else if (opcode & 0x70 == 0x30)
+		{ // PC Offset
+			addr = core->PC + ((int32_t) get_pc_long(core));
+		}
+		else if (opcode & 0x70 == 0x40)
+		{ // A Offset
+			addr = core->A + ((int16_t) get_pc_long(core));
+		}
+		else if (opcode & 0x70 == 0x50)
+		{ // B Offset
+			addr = core->B + ((int8_t) get_pc_long(core));
+		}
 
-	case 0x40: // CAL
-		addr = get_pc_long(core);
-		push_stack_long(core, core->PC);
-		core->PC = addr;
-		break;
-	case 0x41: // RET
-		core->PC = pop_stack_long(core);
-		break;
-	case 0x42: // JMP
-		core->PC = get_pc_long(core);
-		break;
-	case 0x43: // JEQ
-		if (core->FLAG & ZER)
-			core->PC = get_pc_long(core);
-		else
-			get_pc_long(core);
-		break;
-	case 0x44: // JGT
-		if (core->FLAG & NEG)
-			get_pc_long(core);
-		else
-			core->PC = get_pc_long(core);
-		break;
+		// Load / Store
+		if (opcode & 0x01 == 0x00)
+		{ // Load
+			if (opcode & 0x06 == 0x00)
+				val = get_long(core, addr);
+			else if (opcode & 0x06 == 0x02)
+				val = get_int(core, addr);
+			else if (opcode & 0x06 == 0x04)
+				val = get_short(core, addr);
+			else if (opcode & 0x06 == 0x06)
+				val = get_byte(core, addr);
 
-	case 0x50: // ADD
-		core->A += core->B;
-		break;
-	case 0x51: // SUB
-		core->A -= core->B;
-		break;
-	case 0x52: // NEA
-		core->A = ~core->A;
-		break;
-	case 0x53: // NEB
-		core->B = ~core->B;
-		break;
-	case 0x54: // AND
-		core->A &= core->B;
-		break;
-	case 0x55: // OR
-		core->A |= core->B;
-		break;
-	case 0x56: // XOR
-		core->A ^= core->B;
-		break;
-	case 0x57: // CMP
-		if (core->A == core->B)
-			core->FLAG |= ZER;
-		else
-			core->FLAG &= ~ZER;
-		if (core->A < core->B)
-			core->FLAG |= NEG;
-		else
-			core->FLAG &= ~NEG;
-		break;
-	case 0x5A: // SWP
-		addr = core->B;
-		core->B = core->A;
-		core->A = addr;
-		break;
-	case 0x5B: // SPC
-		addr = core->SP;
-		core->SP = core->PC;
-		core->PC = addr;
-		break;
-	case 0x5C: // APC
-		addr = core->PC;
-		core->PC = core->A;
-		core->A = addr;
-		break;
-	case 0x5D: // ASP
-		addr = core->SP;
-		core->SP = core->A;
-		core->A = addr;
-		break;
-	case 0x5E: // BPC
-		addr = core->B;
-		core->B = core->PC;
-		core->PC = addr;
-		break;
-	case 0x5F: // BSP
-		addr = core->B;
-		core->B = core->SP;
-		core->SP = addr;
-		break;
-	
-	case 0x60: // MTP
-		core->A -= (uint64_t) memory;
-		break;
-	case 0x61: // PTM
-		core->A += (uint64_t) memory;
-		break;
-	case 0x62: // MCA
-		if (!machine_call(core)) 
+			if (opcode & 0x08 == 0x00)
+				core->A = val;
+			else if (opcode & 0x08 == 0x08)
+				core->B = val;
+		}
+		else if (opcode & 0x01 == 0x01)
+		{ // Store
+			if (opcode & 0x08 == 0x00)
+				val = core->A;
+			else if (opcode & 0x08 == 0x08)
+				val = core->B;
+
+			if (opcode & 0x06 == 0x00)
+				put_long(core, addr, val);
+			else if (opcode & 0x06 == 0x02)
+				put_int(core, addr, val);
+			else if (opcode & 0x06 == 0x04)
+				put_short(core, addr, val);
+			else if (opcode & 0x06 == 0x06)
+				put_byte(core, addr, val);
+		}
+	}
+	else if (opcode & 0xF0 == 0x80)
+	{ // Stack Instructions
+		uint64_t val;
+		if (opcode & 0x01 == 0x00)
+		{ // Pop
+			if (opcode & 0x06 == 0x00)
+				val = pop_stack_long(core);
+			else if (opcode & 0x06 == 0x02)
+				val = pop_stack_int(core);
+			else if (opcode & 0x06 == 0x04)
+				val = pop_stack_short(core);
+			else if (opcode & 0x06 == 0x06)
+				val = pop_stack_byte(core);
+			
+			if (opcode & 0x08 == 0x00)
+				core->A = val;
+			else if (opcode & 0x08 == 0x08)
+				core->B = val;
+		}
+		else if (opcode & 0x01 == 0x011)
+		{ // Push
+			if (opcode & 0x08 == 0x00)
+				val = core->A;
+			else if (opcode & 0x08 == 0x08)
+				val = core->B;
+			
+			if (opcode & 0x06 == 0x00)
+				push_stack_long(core, val);
+			else if (opcode & 0x06 == 0x02)
+				push_stack_int(core, val);
+			else if (opcode & 0x06 == 0x04)
+				push_stack_short(core, val);
+			else if (opcode & 0x06 == 0x06)
+				push_stack_byte(core, val);
+		}
+	}
+	else
+	{ // Other Instructions
+		switch (opcode)
+		{
+		case 0x90: // CAL
+			addr = get_pc_long(core);
+			push_stack_long(core, core->PC);
+			core->PC = addr;
+			break;
+		case 0x91: // RET
+			core->PC = pop_stack_long(core);
+			break;
+		case 0x92: // JMP
+			core->PC = get_pc_long(core);
+			break;
+		case 0x93: // JEQ
+			if (core->FLAG & ZER)
+				core->PC = get_pc_long(core);
+			else
+				get_pc_long(core);
+			break;
+		case 0x94: // JGT
+			if (core->FLAG & NEG)
+				get_pc_long(core);
+			else
+				core->PC = get_pc_long(core);
+			break;
+
+		case 0xA0: // ADD
+			core->A += core->B;
+			break;
+		case 0xA1: // SUB
+			core->A -= core->B;
+			break;
+		case 0xA2: // NEA
+			core->A = ~core->A;
+			break;
+		case 0xA3: // NEB
+			core->B = ~core->B;
+			break;
+		case 0xA4: // AND
+			core->A &= core->B;
+			break;
+		case 0xA5: // OR
+			core->A |= core->B;
+			break;
+		case 0xA6: // XOR
+			core->A ^= core->B;
+			break;
+		case 0xA7: // CMP
+			if (core->A == core->B)
+				core->FLAG |= ZER;
+			else
+				core->FLAG &= ~ZER;
+			if (core->A < core->B)
+				core->FLAG |= NEG;
+			else
+				core->FLAG &= ~NEG;
+			break;
+		case 0xAA: // SWP
+			addr = core->B;
+			core->B = core->A;
+			core->A = addr;
+			break;
+		case 0xAB: // SPC
+			addr = core->SP;
+			core->SP = core->PC;
+			core->PC = addr;
+			break;
+		case 0xAC: // APC
+			addr = core->PC;
+			core->PC = core->A;
+			core->A = addr;
+			break;
+		case 0xAD: // ASP
+			addr = core->SP;
+			core->SP = core->A;
+			core->A = addr;
+			break;
+		case 0xAE: // BPC
+			addr = core->B;
+			core->B = core->PC;
+			core->PC = addr;
+			break;
+		case 0xAF: // BSP
+			addr = core->B;
+			core->B = core->SP;
+			core->SP = addr;
+			break;
+
+		case 0xB0: // MTP
+			core->A -= (uint64_t)memory;
+			break;
+		case 0xB1: // PTM
+			core->A += (uint64_t)memory;
+			break;
+		case 0xB2: // MCA
+			if (!machine_call(core))
+				return false;
+			break;
+
+		case 0xFE: // NOP
+			break;
+		case 0xFF: // HLT
 			return false;
-		break;
-
-	case 0xFE: // NOP
-		break;
-	case 0xFF: // HLT
-		return false;
-		break;
+			break;
+		}
 	}
 	return true;
 }
 
-bool machine_call(inter_core_t *core) {
+bool machine_call(inter_core_t *core)
+{
 	void *map = mmap(NULL, core->B, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
-	if (map == (void *) -1)
+	if (map == (void *)-1)
 		return false;
 	memcpy(map, get_pc_long(core), core->B);
-	core->A = ((uint64_t (*)(uint64_t))map)(core->A);
+	core->A = ((uint64_t(*)(uint64_t))map)(core->A);
 	munmap(map, core->B);
 	return true;
 }
