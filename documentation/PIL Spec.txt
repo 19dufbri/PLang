@@ -7,130 +7,77 @@ FLAG        NZ------    -    Flag register
     NEG     -   Negative
     ZER     -   Zero
 
-Lowops and Memory Stores:
-0x00                        NOP     -   Do Nothing
-0x01                        RES     -   Reserved
-0x02                        RES     -   Reserved
-0x03                        RES     -   Reserved
-0x04                        RES     -   Reserved
-0x05                        RES     -   Reserved
-0x06                        RES     -   Reserved
-0x07                        RES     -   Reserved
-0x08 0xXXXXXXXXXXXXXXXX     STA64   -   Store A as 64 bit
-0x09 0xXXXXXXXXXXXXXXXX     STA32   -   Store A as 32 bit
-0x0A 0xXXXXXXXXXXXXXXXX     STA16   -   Store A as 16 bit
-0x0B 0xXXXXXXXXXXXXXXXX     STA8    -   Store A as 8 bit
-0x0C 0xXXXXXXXXXXXXXXXX     STB64   -   Store B as 64 bit
-0x0D 0xXXXXXXXXXXXXXXXX     STB32   -   Store B as 32 bit
-0x0E 0xXXXXXXXXXXXXXXXX     STB16   -   Store B as 16 bit
-0x0F 0xXXXXXXXXXXXXXXXX     STB8    -   Store B as 8 bit
+Rough Opcode Mapping: (Offsets are 64 Bit)
+0           000             0           00              0
+Load/Store  Address Mode    Register    Size            Operation
+    0-L/S       0-Immediate     0-A         0-64Bit         0-Load
+    1-Other     1-Direct        1-B         1-32Bit         1-Store
+                2-SP Offset                 2-16Bit
+                3-PC Offset                 3-8Bit
+                4-A  Offset
+                5-B  Offset
+                6-RES
+                7-RES
 
-Load Registers:
-0x10 0xXXXXXXXXXXXXXXXX     LAI64   -   Load 64 bit immediate to A
-0x11 0xXXXXXXXX             LAI32   -   Load 32 bit immediate to A
-0x12 0xXXXX                 LAI16   -   Load 16 bit immediate to A
-0x13 0xXX                   LAI8    -   Load 8 bit immediate to A
-0x14 0xXXXXXXXXXXXXXXXX     LBI64   -   Load 64 bit immediate to B
-0x15 0xXXXXXXXX             LBI32   -   Load 32 bit immediate to B
-0x16 0xXXXX                 LBI16   -   Load 16 bit immediate to B
-0x17 0xXX                   LBI8    -   Load 8 bit immediate to B
-0x18 0xXXXXXXXXXXXXXXXX     LAD64   -   Load 64 bit direct to A
-0x19 0xXXXXXXXXXXXXXXXX     LAD32   -   Load 32 bit direct to A
-0x1A 0xXXXXXXXXXXXXXXXX     LAD16   -   Load 16 bit direct to A
-0x1B 0xXXXXXXXXXXXXXXXX     LAD8    -   Load 8 bit direct to A
-0x1C 0xXXXXXXXXXXXXXXXX     LBD64   -   Load 64 bit direct to B
-0x1D 0xXXXXXXXXXXXXXXXX     LBD32   -   Load 32 bit direct to B
-0x1E 0xXXXXXXXXXXXXXXXX     LBD16   -   Load 16 bit direct to B
-0x1F 0xXXXXXXXXXXXXXXXX     LBD8    -   Load 8 bit direct to B
+Loads/Stores
+0XXXXXXX        -       Follow Addressing as above
 
-Load Registers:
-0x20                        LAA64   -   Load 64 bit from A to A
-0x21                        LAA32   -   Load 32 bit from A to A
-0x22                        LAA16   -   Load 16 bit from A to A
-0x23                        LAA8    -   Load 8 bit from A to A
-0x24                        LBA64   -   Load 64 bit from A to B
-0x25                        LBA32   -   Load 32 bit from A to B
-0x26                        LBA16   -   Load 16 bit from A to B
-0x27                        LBA8    -   Load 8 bit from A to B
-0x28                        LAB64   -   Load 64 bit from B to A
-0x29                        LAB32   -   Load 32 bit from B to A
-0x2A                        LAB16   -   Load 16 bit from B to A
-0x2B                        LAB8    -   Load 8 bit from B to A
-0x2C                        LBB64   -   Load 64 bit from B to B
-0x2D                        LBB32   -   Load 32 bit from B to B
-0x2E                        LBB16   -   Load 16 bit from B to B
-0x2F                        LBB8    -   Load 8 bit from B to B
-
-Stack instructions:
-0x30                        PHA64   -   Push A as 64 bit
-0x31                        PHA32   -   Push A as 32 bit
-0x32                        PHA16   -   Push A as 16 bit
-0x33                        PHA8    -   Push A as 8 bit
-0x34                        PHB64   -   Push B as 64 bit
-0x35                        PHB32   -   Push B as 32 bit
-0x36                        PHB16   -   Push B as 16 bit
-0x37                        PHB8    -   Push B as 8 bit
-0x38                        PLA64   -   Pull A as 64 bit
-0x39                        PLA32   -   Pull A as 32 bit
-0x3A                        PLA16   -   Pull A as 16 bit
-0x3B                        PLA8    -   Pull A as 8 bit
-0x3C                        PLB64   -   Pull B as 64 bit
-0x3D                        PLB32   -   Pull B as 32 bit
-0x3E                        PLB16   -   Pull B as 16 bit
-0x3F                        PLB8    -   Pull B as 8 bit
+Stack Instructions
+1000XXXX        -       Follow Addressing as L/S
 
 Change PC instructions:
-0x40 0xXXXXXXXXXXXXXXXX     CAL     -   Call function at address
-0x41                        RET     -   Return from function
-0x42 0xXXXXXXXXXXXXXXXX     JMP     -   Unconditional Jump
-0x43 0xXXXXXXXXXXXXXXXX     JEQ     -   Jump if ZER set
-0x44 0xXXXXXXXXXXXXXXXX     JGT     -   Jump if NEG unset
-0x45                        RES     -   Reserved
-0x46                        RES     -   Reserved
-0x47                        RES     -   Reserved
-0x48                        RES     -   Reserved
-0x49                        RES     -   Reserved
-0x4A                        RES     -   Reserved
-0x4B                        RES     -   Reserved
-0x4C                        RES     -   Reserved
-0x4D                        RES     -   Reserved
-0x4E                        RES     -   Reserved
-0x4F                        RES     -   Reserved
+0x90 0xXXXXXXXXXXXXXXXX     CAL     -   Call function at address
+0x91                        RET     -   Return from function
+0x92 0xXXXXXXXXXXXXXXXX     JMP     -   Unconditional Jump
+0x93 0xXXXXXXXXXXXXXXXX     JEQ     -   Jump if ZER set
+0x94 0xXXXXXXXXXXXXXXXX     JGT     -   Jump if NEG unset
+0x95                        RES     -   Reserved
+0x96                        RES     -   Reserved
+0x97                        RES     -   Reserved
+0x98                        RES     -   Reserved
+0x99                        RES     -   Reserved
+0x9A                        RES     -   Reserved
+0x9B                        RES     -   Reserved
+0x9C                        RES     -   Reserved
+0x9D                        RES     -   Reserved
+0x9E                        RES     -   Reserved
+0x9F                        RES     -   Reserved
 
 ALU Instructions:
-0x50                        ADD     -   Add B to A
-0x51                        SUB     -   Subtract B from A
-0x52                        NEA     -   Negate A
-0x53                        NEB     -   Negate B
-0x54                        AND     -   Store A and B in A
-0x55                        OR      -   Store A or B in A
-0x56                        XOR     -   Store A xor B in A
-0x57                        CMP     -   Compare A to B
-0x58                        RES     -   Reserved
-0x59                        RES     -   Reserved
-0x5A                        SWP     -   Swap A and B
-0x5B                        SPC     -   Swap SP and PC
-0x5C                        APC     -   Swap A and PC
-0x5D                        ASP     -   Swap A and SP
-0x5E                        BPC     -   Swap B and PC
-0x5F                        BSP     -   Swap B and SP
+0xA0                        ADD     -   Add B to A
+0xA1                        SUB     -   Subtract B from A
+0xA2                        NEA     -   Negate A
+0xA3                        NEB     -   Negate B
+0xA4                        AND     -   And A and B in A
+0xA5                        OR      -   Or A and B in A
+0xA6                        XOR     -   Xor A and B in A
+0xA7                        CMP     -   Compare A to B
+0xA8                        RES     -   Reserved
+0xA9                        RES     -   Reserved
+0xAA                        SWP     -   Swap A and B
+0xAB                        SPC     -   Swap SP and PC
+0xAC                        APC     -   Swap A and PC
+0xAD                        ASP     -   Swap A and SP
+0xAE                        BPC     -   Swap B and PC
+0xAF                        BSP     -   Swap B and SP
 
 Native Functions:
-0x60                        MTP     -   Convert A to P Address
-0x61                        PTM     -   Convert A to M Address
-0x62 0xXXXXXXXXXXXXXXXX     MCA     -   Machine Call (Operand M pointer, B func length, A input, A return)
-0x63                        RES     -   Reserved
-0x64                        RES     -   Reserved
-0x65                        RES     -   Reserved
-0x66                        RES     -   Reserved
-0x67                        RES     -   Reserved
-0x68                        RES     -   Reserved
-0x69                        RES     -   Reserved
-0x6A                        RES     -   Reserved
-0x6B                        RES     -   Reserved
-0x6C                        RES     -   Reserved
-0x6D                        RES     -   Reserved
-0x6E                        RES     -   Reserved
-0x6F                        RES     -   Reserved
+0xB0                        MTP     -   Convert A to P Address
+0xB1                        PTM     -   Convert A to M Address
+0xB2 0xXXXXXXXXXXXXXXXX     MCA     -   Machine Call (Operand M pointer, B func length, A input, A return)
+0xB3                        RES     -   Reserved
+0xB4                        RES     -   Reserved
+0xB5                        RES     -   Reserved
+0xB6                        RES     -   Reserved
+0xB7                        RES     -   Reserved
+0xB8                        RES     -   Reserved
+0xB9                        RES     -   Reserved
+0xBA                        RES     -   Reserved
+0xBB                        RES     -   Reserved
+0xBC                        RES     -   Reserved
+0xBD                        RES     -   Reserved
+0xBE                        RES     -   Reserved
+0xBF                        RES     -   Reserved
 
+0xFE                        NOP     -   Do Nothing
 0xFF                        HLT     -   Halt
