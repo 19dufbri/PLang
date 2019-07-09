@@ -32,6 +32,8 @@
 0x09    STB64 write_buf+8
 0x80    PLA64
 0x01    STA64 write_buf+16
+0x00    LDA64 write_buf
+0x0E    LDB8 0x16
 0xB2    MCA native_write
 0x91    RET
 
@@ -43,3 +45,5 @@
         hello_string:
         BYTE "Hello World!\r\n", 0
         end_hello_string:
+
+        write_native:
